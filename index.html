@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAIZ SOOQ - Business Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Visual Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-gray-800 pb-24">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-sm">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-lg shadow-md">K</div>
+                <div>
+                    <h1 class="text-base font-bold tracking-wide text-gray-900 leading-tight">KAIZ SOOQ</h1>
+                    <p class="text-[10px] text-gray-400">LEDI & BEBI Store</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 text-gray-600">
+                <button onclick="switchTab('dashboard')" class="p-2 rounded-full hover:bg-gray-100"><i class="fa-solid fa-chart-pie text-sm"></i></button>
+                <button onclick="switchTab('expenses')" class="p-2 rounded-full hover:bg-gray-100"><i class="fa-solid fa-wallet text-sm"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto px-4 py-4 space-y-5">
+
+        <!-- Search Bar -->
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"><i class="fa-solid fa-search text-sm"></i></span>
+            <input type="text" id="customer-search" oninput="renderCustomers()" placeholder="Search customer, dress, or code..." class="w-full pl-11 pr-4 py-3 bg-gray-100 rounded-2xl text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-600 transition shadow-inner">
+        </div>
+
+        <!-- Banner Card -->
+        <div class="bg-gradient-to-r from-emerald-800 to-emerald-950 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden">
+            <div class="relative z-10 space-y-2">
+                <span class="bg-emerald-700/60 text-emerald-100 text-[10px] px-2.5 py-1 rounded-full font-medium">✨ Smart Manager Active</span>
+                <h3 class="text-xl font-bold">Orders & Tailor Hub</h3>
+                <p class="text-xs text-emerald-200">Track tasks, balance reminders & visual profit reports.</p>
+                <div class="pt-2 flex space-x-2">
+                    <button onclick="openCustomerModal()" class="bg-white text-emerald-950 px-4 py-2 rounded-xl text-xs font-bold shadow hover:bg-emerald-50 transition"><i class="fa-solid fa-user-plus"></i> Add Customer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. DASHBOARD TAB -->
+        <section id="tab-dashboard" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-xs text-gray-400 font-medium">Total Revenue</p>
+                    <h3 class="text-lg font-bold text-gray-900 mt-1" id="dash-total-revenue">₹0</h3>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-xs text-gray-400 font-medium">Net Profit</p>
+                    <h3 class="text-lg font-bold text-emerald-600 mt-1" id="dash-total-profit">₹0</h3>
+                </div>
+            </div>
+
+            <!-- Platform Wise Stats -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
+                    <h4 class="text-xs font-bold text-blue-900 mb-2"><i class="fa-solid fa-shirt"></i> LEDI (Blue)</h4>
+                    <p class="text-xs text-gray-600">Revenue: <span id="ledi-revenue" class="font-bold text-blue-700">₹0</span></p>
+                    <p class="text-xs text-gray-600">Pending: <span id="ledi-pending" class="font-bold">0</span></p>
+                </div>
+                <div class="bg-purple-50/60 border border-purple-100 p-4 rounded-2xl">
+                    <h4 class="text-xs font-bold text-purple-900 mb-2"><i class="fa-solid fa-baby-carriage"></i> BEBI (Lavender)</h4>
+                    <p class="text-xs text-gray-600">Revenue: <span id="bebi-revenue" class="font-bold text-purple-700">₹0</span></p>
+                    <p class="text-xs text-gray-600">Pending: <span id="bebi-pending" class="font-bold">0</span></p>
+                </div>
+            </div>
+
+            <!-- Upcoming Deliveries -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                <h4 class="font-bold text-gray-900 text-sm flex items-center justify-between">
+                    <span><i class="fa-solid fa-truck-fast text-emerald-600"></i> Upcoming Deliveries</span>
+                </h4>
+                <div id="upcoming-deliveries" class="space-y-2">
+                    <p class="text-gray-400 text-xs">No pending deliveries.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CUSTOMERS TAB -->
+        <section id="tab-customers" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-900">Customers</h2>
+                <button onclick="openCustomerModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+
+            <div class="flex space-x-2 bg-gray-200/60 p-1 rounded-xl text-xs font-medium">
+                <button onclick="switchCustomerSubTab('pending')" id="btn-cust-pending" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-emerald-700 font-bold transition">Pending</button>
+                <button onclick="switchCustomerSubTab('completed')" id="btn-cust-completed" class="flex-1 py-2 rounded-lg text-gray-600 transition">Completed</button>
+            </div>
+
+            <div id="customer-list-container" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- 3. ITEM STORE TAB -->
+        <section id="tab-store" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-900">Item Store</h2>
+                <button onclick="openStoreModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-plus"></i> Add Item</button>
+            </div>
+            <div id="store-items-grid" class="grid grid-cols-2 gap-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- 4. EMPLOYEES / TAILORS TAB (Feature 2 Integration) -->
+        <section id="tab-employees" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-900">Tailors & Staff Hub</h2>
+                <button onclick="openEmployeeModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+            <div id="employee-list-container" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- 5. EXPENSES TAB -->
+        <section id="tab-expenses" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-900">Expenses</h2>
+                <button onclick="openExpenseModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div id="expense-list-container" class="space-y-2">
+                    <p class="text-gray-400 text-xs">No expenses added yet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. ANALYTICS TAB (Feature 5 Visual Charts Integration) -->
+        <section id="tab-analytics" class="hidden space-y-4">
+            <h2 class="text-base font-bold text-gray-900">Visual Analytics & Reports</h2>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                <h3 class="text-xs font-bold text-gray-700">Platform Revenue Share</h3>
+                <div class="w-full h-48 flex justify-center items-center">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-600">Start Date</label>
+                        <input type="date" id="report-start-date" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-600">End Date</label>
+                        <input type="date" id="report-end-date" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl text-xs">
+                    </div>
+                </div>
+                <button onclick="generateReport()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold shadow">Generate Report</button>
+                <div id="analytics-result" class="mt-2 p-3 bg-gray-50 rounded-xl border text-xs">
+                    <p class="text-gray-400">Select dates to view insights.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-100 flex justify-around py-2.5 z-50 max-w-md mx-auto shadow-lg">
+        <button onclick="switchTab('dashboard')" class="nav-btn text-emerald-600 text-center flex flex-col items-center"><i class="fa-solid fa-house text-base"></i><span class="text-[10px] mt-0.5 font-medium">Home</span></button>
+        <button onclick="switchTab('customers')" class="nav-btn text-gray-400 text-center flex flex-col items-center"><i class="fa-solid fa-users text-base"></i><span class="text-[10px] mt-0.5 font-medium">Customers</span></button>
+        <button onclick="switchTab('store')" class="nav-btn text-gray-400 text-center flex flex-col items-center"><i class="fa-solid fa-store text-base"></i><span class="text-[10px] mt-0.5 font-medium">Store</span></button>
+        <button onclick="switchTab('employees')" class="nav-btn text-gray-400 text-center flex flex-col items-center"><i class="fa-solid fa-user-tie text-base"></i><span class="text-[10px] mt-0.5 font-medium">Staff</span></button>
+        <button onclick="switchTab('analytics')" class="nav-btn text-gray-400 text-center flex flex-col items-center"><i class="fa-solid fa-chart-line text-base"></i><span class="text-[10px] mt-0.5 font-medium">Reports</span></button>
+    </div>
+
+    <!-- Modals -->
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
+            <h3 class="text-base font-bold text-gray-900" id="customer-modal-title">Add New Customer</h3>
+            <form id="customer-form" onsubmit="saveCustomer(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="cust-edit-id">
+                <div>
+                    <label class="block font-medium text-gray-600">Platform</label>
+                    <select id="cust-platform" class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                        <option value="LEDI">LEDI (Blue)</option>
+                        <option value="BEBI">BEBI (Baby Lavender)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Customer Name</label>
+                    <input type="text" id="cust-name" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">WhatsApp Number</label>
+                    <input type="text" id="cust-whatsapp" placeholder="919876543210" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Delivery Date</label>
+                    <input type="date" id="cust-delivery-date" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Item Code</label>
+                    <select id="cust-item-code" onchange="fillItemDetails()" class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                        <option value="">Select from Store</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Dress / Ship Name</label>
+                    <input type="text" id="cust-dress-name" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-medium text-gray-600">Total Cost (₹)</label>
+                        <input type="number" id="cust-total-cost" required oninput="calculateOwnerAndProfit()" class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-600">Advance Paid (₹)</label>
+                        <input type="number" id="cust-advance" required oninput="calculateOwnerAndProfit()" class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-[10px] text-gray-500">Material Cost</label>
+                        <input type="number" id="cust-material-cost" value="0" required oninput="calculateOwnerAndProfit()" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-[10px] text-gray-500">Delivery Chg</label>
+                        <input type="number" id="cust-delivery-charge" value="0" required oninput="calculateOwnerAndProfit()" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-[10px] text-gray-500">Stitching Chg</label>
+                        <input type="number" id="cust-stitching-charge" value="0" required oninput="calculateOwnerAndProfit()" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Assigned Tailor / Employee</label>
+                    <select id="cust-employee" class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="bg-gray-100 p-3 rounded-xl space-y-1">
+                    <p>Owner Earning: <span id="calc-owner" class="font-bold text-purple-600">₹0</span></p>
+                    <p>Business Profit: <span id="calc-profit" class="font-bold text-emerald-600">₹0</span></p>
+                </div>
+
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeCustomerModal()" class="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold shadow">Save & WhatsApp</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Store Modal -->
+    <div id="store-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3">
+            <h3 class="text-base font-bold text-gray-900">Add Store Item</h3>
+            <form id="store-form" onsubmit="saveStoreItem(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="store-edit-id">
+                <div>
+                    <label class="block font-medium text-gray-600">Dress Name</label>
+                    <input type="text" id="store-name" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Dress Code</label>
+                    <input type="text" id="store-code" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Price (₹)</label>
+                    <input type="number" id="store-price" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Image</label>
+                    <input type="file" id="store-image" accept="image/*" class="w-full mt-1 p-2 bg-gray-50 border rounded-xl">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeStoreModal()" class="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold shadow">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Modal -->
+    <div id="employee-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3">
+            <h3 class="text-base font-bold text-gray-900">Add Tailor / Staff</h3>
+            <form id="employee-form" onsubmit="saveEmployee(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="emp-edit-id">
+                <div>
+                    <label class="block font-medium text-gray-600">Tailor Name (ഉമ്മ, നുസ്രത്ത്, അനു etc.)</label>
+                    <input type="text" id="emp-name" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeEmployeeModal()" class="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold shadow">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3">
+            <h3 class="text-base font-bold text-gray-900" id="expense-modal-title">Add Expense</h3>
+            <form id="expense-form" onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="exp-edit-id">
+                <div>
+                    <label class="block font-medium text-gray-600">Title / Reason</label>
+                    <input type="text" id="exp-title" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Amount (₹)</label>
+                    <input type="number" id="exp-amount" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-600">Date</label>
+                    <input type="date" id="exp-date" required class="w-full mt-1 p-2.5 bg-gray-50 border rounded-xl">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeExpenseModal()" class="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold shadow">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Detail Modal -->
+    <div id="customer-detail-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3 text-xs">
+            <h3 class="text-base font-bold text-emerald-900" id="detail-cust-name">Customer Details</h3>
+            <div id="customer-detail-content" class="space-y-1.5 text-gray-600">
+                <!-- Details -->
+            </div>
+            <div class="space-y-2 pt-2">
+                <button id="modal-whatsapp-btn" onclick="" class="w-full py-2.5 bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow"><i class="fa-brands fa-whatsapp text-sm"></i> Send WhatsApp Reminder / Update</button>
+                <button onclick="closeCustomerDetailModal()" class="w-full py-2 bg-gray-200 text-gray-700 rounded-xl font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let customers = JSON.parse(localStorage.getItem('kaiz_customers')) || [];
+        let storeItems = JSON.parse(localStorage.getItem('kaiz_store')) || [];
+        let employees = JSON.parse(localStorage.getItem('kaiz_employees')) || [{id: '1', name: 'ഉമ്മ'}, {id: '2', name: 'നുസ്രത്ത്'}, {id: '3', name: 'അനു'}];
+        let expenses = JSON.parse(localStorage.getItem('kaiz_expenses')) || [];
+
+        let currentCustSubTab = 'pending';
+        let revenueChartInstance = null;
+
+        function saveData() {
+            localStorage.setItem('kaiz_customers', JSON.stringify(customers));
+            localStorage.setItem('kaiz_store', JSON.stringify(storeItems));
+            localStorage.setItem('kaiz_employees', JSON.stringify(employees));
+            localStorage.setItem('kaiz_expenses', JSON.stringify(expenses));
+            updateDashboard();
+            renderCustomers();
+            renderStore();
+            renderEmployees();
+            renderExpenses();
+            populateDropdowns();
+            updateChart();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            let navButtons = document.querySelectorAll('.fixed.bottom-0 button');
+            navButtons.forEach(btn => btn.className = "nav-btn text-gray-400 text-center flex flex-col items-center");
+            
+            let map = { dashboard: 0, customers: 1, store: 2, employees: 3, analytics: 4 };
+            if(map[tabId] !== undefined) {
+                navButtons[map[tabId]].className = "nav-btn text-emerald-600 text-center flex flex-col items-center";
+            }
+            if(tabId === 'analytics') {
+                updateChart();
+            }
+        }
+
+        function switchCustomerSubTab(subTab) {
+            currentCustSubTab = subTab;
+            if(subTab === 'pending') {
+                document.getElementById('btn-cust-pending').className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-emerald-700 font-bold transition";
+                document.getElementById('btn-cust-completed').className = "flex-1 py-2 rounded-lg text-gray-600 transition";
+            } else {
+                document.getElementById('btn-cust-completed').className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-emerald-700 font-bold transition";
+                document.getElementById('btn-cust-pending').className = "flex-1 py-2 rounded-lg text-gray-600 transition";
+            }
+            renderCustomers();
+        }
+
+        function updateDashboard() {
+            let totalRev = 0, grossProfit = 0;
+            let lediRev = 0, lediPending = 0, bebiRev = 0, bebiPending = 0;
+
+            customers.forEach(c => {
+                let orderExpenses = Number(c.materialCost) + Number(c.deliveryCharge) + Number(c.stitchingCost);
+                let netAfterExpense = Number(c.totalCost) - orderExpenses;
+                let ownerPart = netAfterExpense > 300 ? 300 : (netAfterExpense > 0 ? netAfterExpense : 0);
+                let profitPart = netAfterExpense > 300 ? netAfterExpense - 300 : 0;
+
+                totalRev += Number(c.totalCost);
+                grossProfit += profitPart;
+
+                if(c.status !== 'completed') {
+                    if(c.platform === 'LEDI') lediPending++;
+                    if(c.platform === 'BEBI') bebiPending++;
+                }
+
+                if(c.platform === 'LEDI') lediRev += Number(c.totalCost);
+                else bebiRev += Number(c.totalCost);
+            });
+
+            let totalGeneralExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+            let netBusinessProfit = grossProfit - totalGeneralExpenses;
+
+            document.getElementById('dash-total-revenue').innerText = `₹${totalRev}`;
+            document.getElementById('dash-total-profit').innerText = `₹${netBusinessProfit}`;
+            document.getElementById('ledi-revenue').innerText = `₹${lediRev}`;
+            document.getElementById('ledi-pending').innerText = lediPending;
+            document.getElementById('bebi-revenue').innerText = `₹${bebiRev}`;
+            document.getElementById('bebi-pending').innerText = bebiPending;
+
+            renderUpcomingDeliveries();
+        }
+
+        function renderUpcomingDeliveries() {
+            let container = document.getElementById('upcoming-deliveries');
+            let pendingCusts = customers.filter(c => c.status !== 'completed').sort((a,b) => new Date(a.deliveryDate) - new Date(b.deliveryDate));
+            
+            if(pendingCusts.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-xs">No pending deliveries.</p>`;
+                return;
+            }
+
+            let html = '';
+            pendingCusts.slice(0, 2).forEach(c => {
+                html += `
+                    <div onclick="showCustomerDetail('${c.id}')" class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-emerald-50/50 cursor-pointer">
+                        <div>
+                            <p class="font-bold text-gray-800 text-xs">${c.name} <span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">${c.platform}</span></p>
+                            <p class="text-[10px] text-gray-500">${c.dressName} | Tailor: <strong>${c.employee || 'Unassigned'}</strong></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-rose-600"><i class="fa-solid fa-calendar"></i> ${c.deliveryDate}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderCustomers() {
+            let container = document.getElementById('customer-list-container');
+            let searchTerm = document.getElementById('customer-search').value.toLowerCase();
+            
+            let filtered = customers.filter(c => {
+                let matchesSubTab = currentCustSubTab === 'completed' ? c.status === 'completed' : c.status !== 'completed';
+                let matchesSearch = c.name.toLowerCase().includes(searchTerm) || 
+                                    c.whatsapp.toLowerCase().includes(searchTerm) || 
+                                    c.dressName.toLowerCase().includes(searchTerm) || 
+                                    c.itemCode.toLowerCase().includes(searchTerm);
+                return matchesSubTab && matchesSearch;
+            });
+            
+            if(filtered.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-xs text-center py-4">No customers found.</p>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(c => {
+                let balance = Number(c.totalCost) - Number(c.advance);
+                html += `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-gray-900 text-xs cursor-pointer text-emerald-700 hover:underline" onclick="showCustomerDetail('${c.id}')">${c.name}</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full ${c.platform === 'LEDI' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">${c.platform}</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500">WhatsApp: <a href="https://wa.me/${c.whatsapp}" target="_blank" class="text-emerald-600 font-semibold underline">${c.whatsapp}</a></p>
+                        <p class="text-[11px] text-gray-500">Dress: ${c.dressName} (${c.itemCode}) | Tailor: <strong class="text-emerald-700">${c.employee || 'Not Assigned'}</strong></p>
+                        <p class="text-[11px] text-gray-500">Total: ₹${c.totalCost} | Adv: ₹${c.advance} | <span class="text-rose-600 font-bold">Due: ₹${balance}</span></p>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-100 text-xs">
+                            <div class="flex items-center space-x-2">
+                                ${c.status !== 'completed' ? 
+                                    `<button onclick="markCompleted('${c.id}')" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold"><i class="fa-solid fa-check"></i> Complete</button>` : 
+                                    `<span class="text-emerald-600 font-bold text-[10px]"><i class="fa-solid fa-circle-check"></i> Completed</span>`
+                                }
+                                <button onclick="sendWhatsAppReminder('${c.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold"><i class="fa-brands fa-whatsapp"></i> Reminder</button>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="editCustomer('${c.id}')" class="text-blue-600"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteCustomer('${c.id}')" class="text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderStore() {
+            let container = document.getElementById('store-items-grid');
+            if(storeItems.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-xs col-span-2 text-center py-4">No items added.</p>`;
+                return;
+            }
+            let html = '';
+            storeItems.forEach(item => {
+                html += `
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 space-y-2">
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full h-28 object-cover rounded-xl">
+                        <h4 class="font-bold text-gray-800 text-xs truncate">${item.name}</h4>
+                        <p class="text-[10px] text-gray-500">Code: ${item.code} | <span class="font-bold text-emerald-600">₹${item.price}</span></p>
+                        <div class="flex justify-end space-x-2 pt-1 border-t text-xs">
+                            <button onclick="deleteStoreItem('${item.id}')" class="text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderEmployees() {
+            let container = document.getElementById('employee-list-container');
+            if(employees.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-xs text-center py-4">No tailors/staff added.</p>`;
+                return;
+            }
+            let html = '';
+            employees.forEach(emp => {
+                let empCusts = customers.filter(c => c.employee === emp.name);
+                let totalStitching = empCusts.reduce((sum, c) => sum + Number(c.stitchingCost || 0), 0);
+                let pendingCount = empCusts.filter(c => c.status !== 'completed').length;
+                html += `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-gray-900 text-sm"><i class="fa-solid fa-scissors text-emerald-600"></i> ${emp.name}</h4>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Pending Works: ${pendingCount}</span>
+                        </div>
+                        <p class="text-gray-500">Total Assigned Orders: <strong class="text-gray-800">${empCusts.length}</strong></p>
+                        <p class="text-gray-500">Stitching Charges Allocated: <span class="font-bold text-emerald-600">₹${totalStitching}</span></p>
+                        <div class="flex justify-end space-x-2 pt-2 border-t">
+                            <button onclick="deleteEmployee('${emp.id}')" class="text-rose-600"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderExpenses() {
+            let container = document.getElementById('expense-list-container');
+            if(expenses.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-xs text-center py-2">No expenses added.</p>`;
+                return;
+            }
+            let html = '';
+            expenses.forEach(exp => {
+                html += `
+                    <div class="flex justify-between items-center p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                        <div>
+                            <p class="font-bold text-gray-800">${exp.title}</p>
+                            <p class="text-[10px] text-gray-400">${exp.date}</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-rose-600">₹${exp.amount}</span>
+                            <button onclick="deleteExpense('${exp.id}')" class="text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function populateDropdowns() {
+            let itemSelect = document.getElementById('cust-item-code');
+            let empSelect = document.getElementById('cust-employee');
+            
+            let itemHtml = '<option value="">Select Item</option>';
+            storeItems.forEach(i => { itemHtml += `<option value="${i.code}" data-name="${i.name}" data-price="${i.price}">${i.code} - ${i.name}</option>`; });
+            itemSelect.innerHTML = itemHtml;
+
+            let empHtml = '<option value="">Select Tailor / Staff</option>';
+            employees.forEach(e => { empHtml += `<option value="${e.name}">${e.name}</option>`; });
+            empSelect.innerHTML = empHtml;
+        }
+
+        function openCustomerModal() { document.getElementById('customer-modal').classList.remove('hidden'); document.getElementById('customer-form').reset(); document.getElementById('cust-edit-id').value = ''; }
+        function closeCustomerModal() { document.getElementById('customer-modal').classList.add('hidden'); }
+        function openStoreModal() { document.getElementById('store-modal').classList.remove('hidden'); document.getElementById('store-form').reset(); document.getElementById('store-edit-id').value = ''; }
+        function closeStoreModal() { document.getElementById('store-modal').classList.add('hidden'); }
+        function openEmployeeModal() { document.getElementById('employee-modal').classList.remove('hidden'); document.getElementById('employee-form').reset(); document.getElementById('emp-edit-id').value = ''; }
+        function closeEmployeeModal() { document.getElementById('employee-modal').classList.add('hidden'); }
+        function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); document.getElementById('expense-form').reset(); document.getElementById('exp-edit-id').value = ''; document.getElementById('exp-date').value = new Date().toISOString().split('T')[0]; }
+        function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
+
+        function showCustomerDetail(id) {
+            let c = customers.find(x => x.id === id);
+            if(!c) return;
+            let balance = Number(c.totalCost) - Number(c.advance);
+            document.getElementById('detail-cust-name').innerText = c.name;
+            document.getElementById('customer-detail-content').innerHTML = `
+                <p><strong>WhatsApp:</strong> ${c.whatsapp}</p>
+                <p><strong>Platform:</strong> ${c.platform}</p>
+                <p><strong>Dress:</strong> ${c.dressName} (${c.itemCode})</p>
+                <p><strong>Assigned Tailor:</strong> ${c.employee || 'Unassigned'}</p>
+                <p><strong>Total Price:</strong> ₹${c.totalCost}</p>
+                <p><strong>Advance:</strong> ₹${c.advance}</p>
+                <p><strong>Balance Due:</strong> <span class="text-rose-600 font-bold">₹${balance}</span></p>
+                <p><strong>Delivery Date:</strong> ${c.deliveryDate}</p>
+            `;
+            document.getElementById('modal-whatsapp-btn').setAttribute('onclick', `sendWhatsAppReminder('${c.id}')`);
+            document.getElementById('customer-detail-modal').classList.remove('hidden');
+        }
+        function closeCustomerDetailModal() { document.getElementById('customer-detail-modal').classList.add('hidden'); }
+
+        // Feature 1: Automated WhatsApp Reminders
+        function sendWhatsAppReminder(id) {
+            let c = customers.find(x => x.id === id);
+            if(!c) return;
+            let balance = Number(c.totalCost) - Number(c.advance);
+            let message = `Hello *${c.name}*! 👋\n\nGreetings from *KAIZ SOOQ* (${c.platform})! 🌸\n\nHere is your order update:\n👗 *Dress:* ${c.dressName} (${c.itemCode})\n💰 *Total Price:* ₹${c.totalCost}\n💵 *Advance Paid:* ₹${c.advance}\n📌 *Balance Due:* ₹${balance}\n📅 *Expected Delivery:* ${c.deliveryDate}\n\nThank you for choosing us! ✨`;
+            window.open(`https://wa.me/${c.whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function saveStoreItem(e) {
+            e.preventDefault();
+            let id = document.getElementById('store-edit-id').value || Date.now().toString();
+            let name = document.getElementById('store-name').value;
+            let code = document.getElementById('store-code').value;
+            let price = document.getElementById('store-price').value;
+            let file = document.getElementById('store-image').files[0];
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                let img = evt.target.result;
+                storeItems.push({ id, name, code, price, image: img });
+                saveData();
+                closeStoreModal();
+            };
+            if(file) reader.readAsDataURL(file);
+            else {
+                storeItems.push({ id, name, code, price, image: '' });
+                saveData();
+                closeStoreModal();
+            }
+        }
+
+        function saveEmployee(e) {
+            e.preventDefault();
+            let id = document.getElementById('emp-edit-id').value || Date.now().toString();
+            employees.push({ id, name: document.getElementById('emp-name').value });
+            saveData();
+            closeEmployeeModal();
+        }
+
+        function saveExpense(e) {
+            e.preventDefault();
+            let id = document.getElementById('exp-edit-id').value || Date.now().toString();
+            expenses.push({ id, title: document.getElementById('exp-title').value, amount: document.getElementById('exp-amount').value, date: document.getElementById('exp-date').value });
+            saveData();
+            closeExpenseModal();
+        }
+
+        function fillItemDetails() {
+            let select = document.getElementById('cust-item-code');
+            let opt = select.options[select.selectedIndex];
+            if(opt.value) {
+                document.getElementById('cust-dress-name').value = opt.getAttribute('data-name');
+                document.getElementById('cust-total-cost').value = opt.getAttribute('data-price');
+                calculateOwnerAndProfit();
+            }
+        }
+
+        function calculateOwnerAndProfit() {
+            let total = Number(document.getElementById('cust-total-cost').value) || 0;
+            let adv = Number(document.getElementById('cust-advance').value) || 0;
+            let mat = Number(document.getElementById('cust-material-cost').value) || 0;
+            let del = Number(document.getElementById('cust-delivery-charge').value) || 0;
+            let stit = Number(document.getElementById('cust-stitching-charge').value) || 0;
+            let net = total - (mat + del + stit);
+            let owner = net > 300 ? 300 : (net > 0 ? net : 0);
+            let profit = net > 300 ? net - 300 : 0;
+            document.getElementById('calc-owner').innerText = `₹${owner}`;
+            document.getElementById('calc-profit').innerText = `₹${profit}`;
+        }
+
+        function saveCustomer(e) {
+            e.preventDefault();
+            let id = document.getElementById('cust-edit-id').value || Date.now().toString();
+            let data = {
+                id,
+                platform: document.getElementById('cust-platform').value,
+                name: document.getElementById('cust-name').value,
+                whatsapp: document.getElementById('cust-whatsapp').value,
+                deliveryDate: document.getElementById('cust-delivery-date').value,
+                itemCode: document.getElementById('cust-item-code').value,
+                dressName: document.getElementById('cust-dress-name').value,
+                totalCost: document.getElementById('cust-total-cost').value,
+                advance: document.getElementById('cust-advance').value,
+                materialCost: document.getElementById('cust-material-cost').value,
+                deliveryCharge: document.getElementById('cust-delivery-charge').value,
+                stitchingCost: document.getElementById('cust-stitching-charge').value,
+                employee: document.getElementById('cust-employee').value,
+                status: 'pending'
+            };
+            customers.push(data);
+            saveData();
+            closeCustomerModal();
+            sendWhatsAppReminder(id);
+        }
+
+        function markCompleted(id) {
+            let c = customers.find(x => x.id === id);
+            if(c) { c.status = 'completed'; saveData(); }
+        }
+
+        function deleteCustomer(id) {
+            if(confirm('Delete customer?')) { customers = customers.filter(x => x.id !== id); saveData(); }
+        }
+
+        function deleteStoreItem(id) { storeItems = storeItems.filter(x => x.id !== id); saveData(); }
+        function deleteEmployee(id) { employees = employees.filter(x => x.id !== id); saveData(); }
+        function deleteExpense(id) { expenses = expenses.filter(x => x.id !== id); saveData(); }
+
+        // Feature 5: Visual Charts Integration (Chart.js)
+        function updateChart() {
+            let lediTotal = customers.filter(c => c.platform === 'LEDI').reduce((sum, c) => sum + Number(c.totalCost), 0);
+            let bebiTotal = customers.filter(c => c.platform === 'BEBI').reduce((sum, c) => sum + Number(c.totalCost), 0);
+
+            let ctx = document.getElementById('revenueChart');
+            if(!ctx) return;
+
+            if(revenueChartInstance) {
+                revenueChartInstance.destroy();
+            }
+
+            revenueChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['LEDI Store', 'BEBI Store'],
+                    datasets: [{
+                        data: [lediTotal || 1, bebiTotal || 1],
+                        backgroundColor: ['#3b82f6', '#a855f7'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function generateReport() {
+            let start = document.getElementById('report-start-date').value;
+            let end = document.getElementById('report-end-date').value;
+            let filtered = customers.filter(c => c.deliveryDate >= start && c.deliveryDate <= end);
+            let rev = filtered.reduce((sum, c) => sum + Number(c.totalCost), 0);
+            document.getElementById('analytics-result').innerHTML = `<p>Filtered Orders: <strong>${filtered.length}</strong></p><p>Total Revenue: <strong class="text-emerald-600">₹${rev}</strong></p>`;
+        }
+
+        window.onload = function() { saveData(); };
+    </script>
+</body>
+</html>
